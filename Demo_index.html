@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Payment Systems | DataPrecedence Dashboard</title>
+    <link rel="stylesheet" href="Demo_style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <a href="#top" class="logo-link">
+                <img src="Demo_logo.png" alt="DataPrecedence" class="logo-image">
+            </a>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="#dashboard" class="nav-item active">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            <a href="#master-table" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Master Table</span>
+            </a>
+            <a href="#negative" class="nav-item">
+                <span class="nav-icon">⚠️</span>
+                <span class="nav-label">Negative Residuals</span>
+            </a>
+            <a href="#changes" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Major Changes</span>
+            </a>
+            <a href="#valuation" class="nav-item">
+                <span class="nav-icon">💎</span>
+                <span class="nav-label">Valuation</span>
+            </a>
+            <a href="#analytics" class="nav-item">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">Analytics</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">DP</div>
+                <div class="user-info">
+                    <div class="user-name">Demo Partner</div>
+                    <div class="user-role">ISO Dashboard</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Anchor -->
+        <div id="top"></div>
+        
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Residual Dashboard</h1>
+                    <p class="page-subtitle">Demo Payment Systems</p>
+                </div>
+                <div class="header-right">
+                    <div class="filter-group">
+                        <label for="periodSelect">Period:</label>
+                        <select id="periodSelect" class="filter-select">
+                            <option value="total">Total (Both Months)</option>
+                            <option value="november" selected>November 2025</option>
+                            <option value="october">October 2025</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="agentSelect">Agent:</label>
+                        <select id="agentSelect" class="filter-select">
+                            <option value="all">All Agents</option>
+                        </select>
+                    </div>
+                    <button class="export-btn" onclick="downloadAllCSV()">CSV</button>
+                    <button class="export-btn" onclick="downloadExcel()">Excel</button>
+                </div>
+            </header>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Total Residuals</span>
+                        <span class="kpi-badge" id="residualBadge">+11.1%</span>
+                    </div>
+                    <div class="kpi-value" id="totalResiduals">$52,166</div>
+                    <div class="kpi-subtext" id="residualSubtext">vs previous period</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Active Merchants</span>
+                        <span class="kpi-badge" id="merchantBadge">+11</span>
+                    </div>
+                    <div class="kpi-value" id="activeMerchants">363</div>
+                    <div class="kpi-subtext" id="merchantSubtext">merchants</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Avg. Per Merchant</span>
+                        <span class="kpi-badge" id="avgBadge">+7.9%</span>
+                    </div>
+                    <div class="kpi-value" id="avgPerMerchant">$144</div>
+                    <div class="kpi-subtext" id="avgSubtext">per active merchant</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-label">Processing Volume</span>
+                        <span class="kpi-badge" id="volumeBadge">-18.2%</span>
+                    </div>
+                    <div class="kpi-value" id="processingVolume">$8.16M</div>
+                    <div class="kpi-subtext" id="volumeSubtext">total volume</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card large">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Monthly Residual Trends</h3>
+                    </div>
+                    <canvas id="residualChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Agent Distribution</h3>
+                        <p class="chart-subtitle">Top 10 by Net Residuals</p>
+                    </div>
+                    <canvas id="agentPieChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top 10 Bar Chart -->
+            <div class="chart-card-full">
+                <div class="chart-header">
+                    <h3 class="chart-title">Top 10 Merchants by Net Residual</h3>
+                </div>
+                <canvas id="top10BarChart"></canvas>
+            </div>
+
+            <!-- Top Merchants Table -->
+            <div class="table-card full-width">
+                <div class="table-header">
+                    <h3 class="table-title">Top 10 Merchants</h3>
+                    <div class="table-info">
+                        <span id="dashboardRecordCount">Showing 10 merchants</span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table sortable" id="dashboardTable">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th data-sort="name">Merchant Name <span class="sort-icon">⇅</span></th>
+                                <th data-sort="mid">MID <span class="sort-icon">⇅</span></th>
+                                <th data-sort="agent">Agent <span class="sort-icon">⇅</span></th>
+                                <th data-sort="volume">Volume <span class="sort-icon">⇅</span></th>
+                                <th data-sort="residual">Net Residual <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Master Table Section -->
+        <section id="master-table" class="section">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Master Report</h1>
+                    <p class="page-subtitle">Complete merchant listing</p>
+                </div>
+                <div class="header-right">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search merchants...">
+                    <button class="export-btn" onclick="downloadFilteredCSV('master')">Export</button>
+                </div>
+            </header>
+            <div class="table-card full-width">
+                <div class="table-header">
+                    <div class="table-info">
+                        <span id="masterRecordCount">Loading...</span>
+                    </div>
+                </div>
+                <div class="table-container scrollable">
+                    <table class="data-table sortable" id="masterTableElement">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th data-sort="name">Merchant Name <span class="sort-icon">⇅</span></th>
+                                <th data-sort="mid">MID <span class="sort-icon">⇅</span></th>
+                                <th data-sort="agent">Agent <span class="sort-icon">⇅</span></th>
+                                <th data-sort="volume">Volume <span class="sort-icon">⇅</span></th>
+                                <th data-sort="transactions">Transactions <span class="sort-icon">⇅</span></th>
+                                <th data-sort="residual">Net Residual <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="masterTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Negative Residuals Section -->
+        <section id="negative" class="section">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Negative Residuals</h1>
+                    <p class="page-subtitle">Merchants with negative net residuals</p>
+                </div>
+                <div class="header-right">
+                    <button class="export-btn" onclick="downloadFilteredCSV('negative')">Export</button>
+                </div>
+            </header>
+            <div class="alert-box warning">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-content">
+                    <strong>Attention Required:</strong> <span id="negativeCount">0</span> merchants with negative residuals
+                </div>
+            </div>
+            <div class="table-card full-width">
+                <div class="table-container scrollable">
+                    <table class="data-table sortable" id="negativeTableElement">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th data-sort="name">Merchant Name <span class="sort-icon">⇅</span></th>
+                                <th data-sort="mid">MID <span class="sort-icon">⇅</span></th>
+                                <th data-sort="agent">Agent <span class="sort-icon">⇅</span></th>
+                                <th data-sort="volume">Volume <span class="sort-icon">⇅</span></th>
+                                <th data-sort="residual">Net Residual <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="negativeTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Major Changes Section -->
+        <section id="changes" class="section">
+            <header class="header">
+                <div class="header-left">
+                    <h1 class="page-title">Major Changes (±30%)</h1>
+                    <p class="page-subtitle">Significant month-over-month changes</p>
+                </div>
+                <div class="header-right">
+                    <button class="export-btn" onclick="downloadFilteredCSV('changes')">Export</button>
+                </div>
+            </header>
+            <div class="alert-box info">
+                <span class="alert-icon">📊</span>
+                <div class="alert-content">
+                    <strong>Analysis:</strong> <span id="changesCount">0</span> merchants with ±30% change from previous period
+                </div>
+            </div>
+            <div class="table-card full-width">
+                <div class="table-container scrollable">
+                    <table class="data-table sortable" id="changesTableElement">
+                        <thead class="sticky-header">
+                            <tr>
+                                <th data-sort="name">Merchant <span class="sort-icon">⇅</span></th>
+                                <th data-sort="mid">MID <span class="sort-icon">⇅</span></th>
+                                <th data-sort="agent">Agent <span class="sort-icon">⇅</span></th>
+                                <th data-sort="previous">Previous <span class="sort-icon">⇅</span></th>
+                                <th data-sort="current">Current <span class="sort-icon">⇅</span></th>
+                                <th data-sort="change">Change % <span class="sort-icon">⇅</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="changesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Valuation Section -->
+        <section id="valuation" class="section">
+            <header class="header">
+                <h1 class="page-title">Portfolio Valuation</h1>
+                <p class="page-subtitle">Estimated portfolio value based on industry multiples</p>
+            </header>
+            
+            <div class="valuation-container">
+                <div class="valuation-card primary">
+                    <h3 class="valuation-title">Estimated Portfolio Value</h3>
+                    <div class="valuation-amount" id="portfolioValue">$0</div>
+                    <p class="valuation-note">Based on 24-36 month residual multiple</p>
+                </div>
+
+                <div class="valuation-metrics">
+                    <div class="valuation-card">
+                        <h4>Conservative (24x)</h4>
+                        <div class="valuation-value" id="conservative24x">$0</div>
+                    </div>
+                    <div class="valuation-card">
+                        <h4>Market (30x)</h4>
+                        <div class="valuation-value" id="market30x">$0</div>
+                    </div>
+                    <div class="valuation-card">
+                        <h4>Premium (36x)</h4>
+                        <div class="valuation-value" id="premium36x">$0</div>
+                    </div>
+                </div>
+
+                <div class="valuation-details">
+                    <h3>Valuation Methodology</h3>
+                    <div class="methodology-grid">
+                        <div class="method-card">
+                            <h4>📊 Industry Standard</h4>
+                            <p>ISO portfolios typically trade at <strong>24-36 months</strong> of trailing monthly residuals.</p>
+                        </div>
+                        <div class="method-card">
+                            <h4>📈 Growth Rate</h4>
+                            <p>Month-over-month growth: <strong id="growthRate">+11.1%</strong> increases valuation multiple.</p>
+                        </div>
+                        <div class="method-card">
+                            <h4>💼 Portfolio Quality</h4>
+                            <p>Active merchants: <strong id="valuationMerchants">363</strong> with stable processing history.</p>
+                        </div>
+                        <div class="method-card">
+                            <h4>⚠️ Risk Factors</h4>
+                            <p>Negative residuals: <strong id="valuationNegative">99</strong> merchants may impact valuation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="valuation-breakdown">
+                    <h3>Monthly Performance Impact</h3>
+                    <table class="valuation-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Current Value</th>
+                                <th>Impact on Valuation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="valuationBreakdown"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics" class="section">
+            <header class="header">
+                <h1 class="page-title">Analytics & Insights</h1>
+                <p class="page-subtitle">Data-driven recommendations for portfolio optimization</p>
+            </header>
+
+            <div class="analytics-container">
+                <!-- Key Insights -->
+                <div class="insights-grid">
+                    <div class="insight-card positive">
+                        <div class="insight-icon">📈</div>
+                        <h3>Growth Trend</h3>
+                        <p class="insight-text" id="insightGrowth">Loading...</p>
+                    </div>
+                    <div class="insight-card warning">
+                        <div class="insight-icon">⚠️</div>
+                        <h3>Risk Alert</h3>
+                        <p class="insight-text" id="insightRisk">Loading...</p>
+                    </div>
+                    <div class="insight-card info">
+                        <div class="insight-icon">💡</div>
+                        <h3>Opportunity</h3>
+                        <p class="insight-text" id="insightOpportunity">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="analytics-section">
+                    <h3>Agent Performance Analysis</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead class="sticky-header">
+                                <tr>
+                                    <th>Agent</th>
+                                    <th>Merchants</th>
+                                    <th>Total Residuals</th>
+                                    <th>Avg Per Merchant</th>
+                                    <th>Performance Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agentPerformanceTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="analytics-section">
+                    <h3>Strategic Recommendations</h3>
+                    <div class="recommendations-grid" id="recommendationsGrid"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="Demo_script.js"></script>
+</body>
+</html>
